@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Movie Requests</title>
+</head>
+<body>
+    <h1>Request a Movie</h1>
+
+    <!-- Request Form -->
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Submit Request</button>
+    </form>
+
+    <hr>
+
+    <!-- Requested Movies -->
+    <h2>Your Requested Movies</h2>
+    <ul>
+        {% for req in requests %}
+            <li>
+                <strong>{{ req.name }}</strong> - {{ req.description }}
+                <form method="post" action="{% url 'delete_request' req.id %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit">Delete</button>
+                </form>
+            </li>
+        {% empty %}
+            <li>No movie requests yet.</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

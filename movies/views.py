@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Movie, Review
 from django.contrib.auth.decorators import login_required
-
+from .models import MovieRequest
+from .forms import MovieRequestForm
 def index(request):
     search_term = request.GET.get('search')
     if search_term:
@@ -60,3 +61,22 @@ def delete_review(request, id, review_id):
         user=request.user)
     review.delete()
     return redirect('movies.show', id=id)
+
+def movie_requests(request):
+    # Handle form submission
+    if request.method == "POST":
+        form = MovieRequestForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('movie_requests')
+    else:
+        form = MovieRequestForm()
+
+    # Get all requests
+    requests = MovieRequest.objects.all().order_by('-created_at')
+    return render(request, 'movies/movie_requests.html', {'form': form, 'requests': requests})
+
+def delete_request(request, pk):
+    req = get_object_or_404(MovieRequest, pk=pk)
+    req.delete()
+    return redirect('movie_requests')
