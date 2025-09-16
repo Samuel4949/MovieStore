@@ -1,6 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Movie, Review
+from .models import Movie, Review, MovieRequest
+from .forms import MovieRequestForm
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 
 def index(request):
     search_term = request.GET.get('search')
@@ -60,3 +62,33 @@ def delete_review(request, id, review_id):
         user=request.user)
     review.delete()
     return redirect('movies.show', id=id)
+
+@login_required
+def movie_requests(request):
+    if request.method == 'POST':
+        form = MovieRequestForm(request.POST)
+        if form.is_valid():
+            movie_request = form.save(commit=False)
+            movie_request.user = request.user
+            movie_request.save()
+            messages.success(request, 'Movie request submitted successfully!')
+            return redirect('movies.movie_requests')
+    else:
+        form = MovieRequestForm()
+    
+    # Get all movie requests for the current user
+    user_requests = MovieRequest.objects.filter(user=request.user).order_by('-date_requested')
+    
+    template_data = {
+        'title': 'Movie Requests',
+        'form': form,
+        'user_requests': user_requests
+    }
+    return render(request, 'movies/movie_requests.html', {'template_data': template_data})
+
+@login_required
+def delete_movie_request(request, request_id):
+    movie_request = get_object_or_404(MovieRequest, id=request_id, user=request.user)
+    movie_request.delete()
+    messages.success(request, 'Movie request deleted successfully!')
+    return redirect('movies.movie_requests')
