@@ -3,7 +3,6 @@ from .models import Movie, Review, MovieRequest
 from .forms import MovieRequestForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-
 def index(request):
     search_term = request.GET.get('search')
     if search_term:
