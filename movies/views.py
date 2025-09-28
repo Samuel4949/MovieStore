@@ -71,7 +71,7 @@ def movie_requests(request):
             movie_request.user = request.user
             movie_request.save()
             messages.success(request, 'Movie request submitted successfully!')
-            return redirect('movies.movie_requests')
+            return redirect('movie_requests')
     else:
         form = MovieRequestForm()
     
@@ -90,7 +90,7 @@ def delete_movie_request(request, request_id):
     movie_request = get_object_or_404(MovieRequest, id=request_id, user=request.user)
     movie_request.delete()
     messages.success(request, 'Movie request deleted successfully!')
-    return redirect('movies.movie_requests')
+    return redirect('movie_requests')
 
 
 def petitions(request):
