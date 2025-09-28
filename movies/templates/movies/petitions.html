@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>{{ template_data.title }}</h2>
+
+  {% if user.is_authenticated %}
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title">Create a new petition</h5>
+      <form method="post">
+        {% csrf_token %}
+        {{ template_data.form.as_p }}
+        <button type="submit" class="btn btn-primary">Submit Petition</button>
+      </form>
+    </div>
+  </div>
+  {% else %}
+  <p>Please <a href="{% url 'accounts.login' %}">login</a> to submit a petition or vote.</p>
+  {% endif %}
+
+  <div class="list-group">
+    {% for req in template_data.all_requests %}
+    <div class="list-group-item d-flex justify-content-between align-items-center">
+      <div>
+        <h5>{{ req.movie_name }}</h5>
+        <p class="mb-1">{{ req.description }}</p>
+        <small>Requested by {{ req.user.username }} • {{ req.date_requested|date:"M d, Y H:i" }}</small>
+      </div>
+      <div class="text-end">
+        <p class="mb-1"><strong>{{ req.vote_count }}</strong> votes</p>
+        {% if user.is_authenticated %}
+          {% if req.user_has_voted %}
+            <a href="{% url 'movies.vote_petition' req.id %}" class="btn btn-sm btn-outline-danger">Remove Vote</a>
+          {% else %}
+            <a href="{% url 'movies.vote_petition' req.id %}" class="btn btn-sm btn-success">Vote</a>
+          {% endif %}
+        {% else %}
+          <a href="{% url 'accounts.login' %}" class="btn btn-sm btn-secondary">Login to vote</a>
+        {% endif %}
+      </div>
+    </div>
+    {% empty %}
+    <p class="text-muted">No petitions yet. Be the first to request a movie!</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock content %}

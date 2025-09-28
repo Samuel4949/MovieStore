@@ -91,3 +91,48 @@ def delete_movie_request(request, request_id):
     movie_request.delete()
     messages.success(request, 'Movie request deleted successfully!')
     return redirect('movies.movie_requests')
+
+
+def petitions(request):
+    """Public page where users can see all movie requests (petitions), create new ones,
+    and vote for requests."""
+    if request.method == 'POST':
+        # reuse the MovieRequestForm for creating petitions
+        if not request.user.is_authenticated:
+            messages.error(request, 'You must be logged in to submit a petition or vote.')
+            return redirect('movies.petitions')
+        form = MovieRequestForm(request.POST)
+        if form.is_valid():
+            movie_request = form.save(commit=False)
+            movie_request.user = request.user
+            movie_request.save()
+            messages.success(request, 'Petition submitted successfully!')
+            return redirect('movies.petitions')
+    else:
+        form = MovieRequestForm()
+
+    all_requests = MovieRequest.objects.all().order_by('-date_requested')
+    # annotate each request with whether the current user has voted (templates can't call methods with args)
+    for r in all_requests:
+        r.user_has_voted = r.has_user_voted(request.user) if request.user.is_authenticated else False
+
+    template_data = {
+        'title': 'Petitions',
+        'form': form,
+        'all_requests': all_requests
+    }
+    return render(request, 'movies/petitions.html', {'template_data': template_data})
+
+
+@login_required
+def vote_petition(request, request_id):
+    """Toggle vote for a petition by the current user."""
+    movie_request = get_object_or_404(MovieRequest, id=request_id)
+    user = request.user
+    if movie_request.has_user_voted(user):
+        movie_request.votes.remove(user)
+        messages.success(request, f'You removed your vote for "{movie_request.movie_name}"')
+    else:
+        movie_request.votes.add(user)
+        messages.success(request, f'You voted for "{movie_request.movie_name}"')
+    return redirect('movies.petitions')

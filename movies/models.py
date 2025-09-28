@@ -27,6 +27,16 @@ class MovieRequest(models.Model):
     description = models.TextField()
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     date_requested = models.DateTimeField(auto_now_add=True)
+    # Users who voted for this request
+    votes = models.ManyToManyField(User, related_name='movie_request_votes', blank=True)
     
     def __str__(self):
         return f"{self.movie_name} - {self.user.username}"
+
+    def vote_count(self):
+        return self.votes.count()
+
+    def has_user_voted(self, user):
+        if not user or not user.is_authenticated:
+            return False
+        return self.votes.filter(id=user.id).exists()
